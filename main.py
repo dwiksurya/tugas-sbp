@@ -4,17 +4,74 @@ from datetime import datetime
 nasabah_list = []
 auto_id_increment = 1
 
-def tentukan_kelayakan(pendapatan, jumlah_pinjaman, pekerjaan_stabil, skor_slik, jaminan):
-    rasio = jumlah_pinjaman / pendapatan if pendapatan > 0 else 0
+def input_float(value):
+    while True:
+        try:
+            return float(input(value))
+        except:
+            print("Input harus angka")
 
-    if skor_slik == 5:
-        return "RESIKO", rasio, "SLIK macet"
 
-    if rasio <= 3 and skor_slik <= 2 and pekerjaan_stabil:
+def input_int_range(value, min_val, max_val):
+    while True:
+        try:
+            val = int(input(value))
+            if min_val <= val <= max_val:
+                return val
+            print(f"Input harus antara {min_val}-{max_val}")
+        except:
+            print("Input harus angka bulat")
+
+
+def input_yesno(value):
+    while True:
+        val = input(value).lower()
+        if val in ["y", "n"]:
+            return val == "y"
+        print("Input harus y/n")
+
+
+# RULES        
+def tentukan_kelayakan(
+    pendapatan,
+    jumlah_pinjaman,
+    pekerjaan_stabil,
+    skor_slik,
+    jaminan
+):
+    if pendapatan <= 0:
+        return "RESIKO", None, "Pendapatan tidak valid"
+
+    if skor_slik < 1 or skor_slik > 5:
+        return "RESIKO", None, "Skor SLIK harus antara 1-5"
+
+    rasio = jumlah_pinjaman / pendapatan
+
+    if skor_slik >= 4:
+        return "RESIKO", rasio, "SLIK macet / buruk"
+
+    if rasio >= 5:
+        return "RESIKO", rasio, "Jumlah pinjaman terlalu besar dibanding pendapatan"
+
+    if (
+        rasio <= 2 and
+        skor_slik <= 2 and
+        (pekerjaan_stabil or jaminan)
+    ):
         return "GOOD", rasio, "Risiko rendah"
 
-    if rasio <= 5 and skor_slik <= 3 and (pekerjaan_stabil or jaminan):
+    if (
+        2 < rasio <= 3 and
+        skor_slik <= 3 and
+        (pekerjaan_stabil or jaminan)
+    ):
         return "MODERATE", rasio, "Risiko sedang"
+
+    if (
+        rasio <= 1.5 and
+        skor_slik <= 2
+    ):
+        return "MODERATE", rasio, "Pendapatan tidak stabil tapi rasio dan SLIK baik"
 
     return "RESIKO", rasio, "Risiko tinggi"
 
@@ -23,11 +80,11 @@ def tambah_nasabah():
     global auto_id_increment
 
     nama = input("Nama: ")
-    pendapatan = float(input("Pendapatan: "))
-    pinjaman = float(input("Jumlah Pinjaman: "))
-    pekerjaan = input("Pekerjaan stabil? (y/n): ").lower() == "y"
-    skor = int(input("Skor SLIK (1-5): "))
-    jaminan = input("Ada jaminan? (y/n): ").lower() == "y"
+    pendapatan = input_float("Pendapatan: ")
+    pinjaman = input_float("Jumlah Pinjaman: ")
+    pekerjaan = input_yesno("Pekerjaan stabil/tetap? (y/n): ")
+    skor = input_int_range("Skor SLIK (1-5): ", 1, 5)
+    jaminan = input_yesno("Ada jaminan? (y/n): ")
 
     kelayakan, rasio, alasan = tentukan_kelayakan(
         pendapatan, pinjaman, pekerjaan, skor, jaminan
@@ -50,7 +107,7 @@ def tambah_nasabah():
     nasabah_list.append(data)
     auto_id_increment += 1
 
-    print("Data berhasil ditambahkan")
+    print("Data nasabah berhasil ditambahkan")
 
 
 def lihat_nasabah():
@@ -73,7 +130,7 @@ def lihat_nasabah():
             n["alasan"]
         ])
 
-    headers = ["ID", "Nama", "Pendapatan", "Pinjaman", "Stabil", "SLIK", "Jaminan", "Rasio", "Status", "Alasan"]
+    headers = ["ID", "Nama", "Pendapatan", "Pinjaman", "Pekerjaan Stabil/Tetap", "SLIK", "Ada Jaminan", "Rasio", "Status", "Alasan"]
     print(tabulate(table, headers=headers, tablefmt="grid"))
 
 
@@ -85,7 +142,7 @@ def edit_nasabah():
             nama = input(f"Nama ({n['nama']}): ") or n["nama"]
             pendapatan = float(input(f"Pendapatan ({n['pendapatan']}): ") or n["pendapatan"])
             pinjaman = float(input(f"Pinjaman ({n['pinjaman']}): ") or n["pinjaman"])
-            pekerjaan = input("Pekerjaan stabil? (y/n): ").lower() == "y"
+            pekerjaan = input("Pekerjaan stabil/tetap? (y/n): ").lower() == "y"
             skor = int(input(f"Skor SLIK ({n['skor_slik']}): ") or n["skor_slik"])
             jaminan = input("Ada jaminan? (y/n): ").lower() == "y"
 
@@ -124,7 +181,7 @@ def hapus_nasabah():
 
 
 def menu():
-    print("\n===== CEK KELAYAKAN KREDIT NASABAH =====")
+    print("\nMENU CEK KELAYAKAN KREDIT NASABAH")
     print("1. Tambah Nasabah")
     print("2. Lihat Nasabah")
     print("3. Edit Nasabah")

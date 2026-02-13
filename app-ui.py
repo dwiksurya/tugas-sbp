@@ -7,23 +7,45 @@ DB_PATH = "kredit.db"
 
 
 def tentukan_kelayakan(
-        pendapatan,
-        jumlah_pinjaman,
-        pekerjaan_stabil,
-        skor_slik,
-        jaminan
+    pendapatan,
+    jumlah_pinjaman,
+    pekerjaan_stabil,
+    skor_slik,
+    jaminan
+):
+    if pendapatan <= 0:
+        return "RESIKO", None, "Pendapatan tidak valid"
+
+    if skor_slik < 1 or skor_slik > 5:
+        return "RESIKO", None, "Skor SLIK harus antara 1-5"
+
+    rasio = jumlah_pinjaman / pendapatan
+
+    if skor_slik >= 4:
+        return "RESIKO", rasio, "SLIK macet / buruk"
+
+    if rasio >= 5:
+        return "RESIKO", rasio, "Jumlah pinjaman terlalu besar dibanding pendapatan"
+
+    if (
+        rasio <= 2 and
+        skor_slik <= 2 and
+        (pekerjaan_stabil or jaminan)
     ):
-
-    rasio = jumlah_pinjaman / pendapatan if pendapatan > 0 else 0
-
-    if skor_slik == 5:
-        return "RESIKO", rasio, "SLIK macet"
-
-    if rasio <= 3 and skor_slik <= 2 and pekerjaan_stabil is True:
         return "GOOD", rasio, "Risiko rendah"
 
-    if rasio <= 5 and skor_slik <= 3 and (pekerjaan_stabil is True or jaminan is True):
+    if (
+        2 < rasio <= 3 and
+        skor_slik <= 3 and
+        (pekerjaan_stabil or jaminan)
+    ):
         return "MODERATE", rasio, "Risiko sedang"
+
+    if (
+        rasio <= 1.5 and
+        skor_slik <= 2
+    ):
+        return "MODERATE", rasio, "Pendapatan tidak stabil tapi rasio dan SLIK baik"
 
     return "RESIKO", rasio, "Risiko tinggi"
 
